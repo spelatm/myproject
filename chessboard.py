@@ -93,7 +93,22 @@ def show(table):
             print(table[i][j], end='	')
         print('')
 
-def picture(chessboard):
+def drawboard(canvas1,board,colors,startx=50,starty=50,cellwidth=50):
+    width=2*startx+len(board)*cellwidth
+    height=2*starty+len(board)*cellwidth
+    canvas1.config(width=width,height=height)#布置画布
+    for i  in range(len(board)):
+        for j in range(len(board)):
+            index=board[i][j]
+            if index== 0:
+                color='white'#特殊方格显示为白色
+            else:
+                color=colors[6*index]#为了间隔开颜色
+            cellx=startx+i*50
+        celly=starty+j*50
+        canvas1.create_rectangle(cellx,celly,cellx+cellwidth,celly+cellwidth,fill=color,outline="black")#画方格
+    canvas1.update()
+
 
 mark = 0
 # n = 8  # 输入8*8的棋盘规格
