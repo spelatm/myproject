@@ -1,8 +1,20 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import sklearn as sl
-import random
+# import math
+# import sklearn as sl
+# import random
+from sklearn import metrics
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+def PolynomialLogisticRegression(degree):
+    return Pipeline([
+        ('poly', PolynomialFeatures(degree=degree)),
+        ('std_scaler', StandardScaler()),
+        ('log_reg', LogisticRegression())
+    ])
 
 # alpha = 0.001
 # def sigmoid(x):
@@ -71,7 +83,7 @@ import random
 # gradDown(train, W, tag_train)
 # print(W)
 # plot(W.T)
-
+# 不知道为什么准确率很低，划分图像划分的太差了，可能是损失函数没有调好的原因
 
 
 
@@ -89,11 +101,11 @@ def loadDataset():
 def sigmoid(X):
     return 1.0/(1+np.exp(X))
 
-def grandascent(datamatin, classlabels,alpha,maxtrix):
+def grandascent(datamatin, classlabels, alpha, maxcycles):
     datamatrix = np.mat(datamatin)
     labelmat = np.mat(classlabels).transpose()
     m, n = np.shape(datamatrix)
-    print(m, n)
+    # print(m, n)
     # alpha = 0.001
     # maxcycles = 500
     weight = np.ones((n, 1))
@@ -129,12 +141,65 @@ def plot(W):
     plt.ylabel('X2')
     plt.show()
 
+def error(labelMat, y):
+    e = 0
+    for i in range(len(labelMat)):
+        if y[i] != labelMat[i]:
+            e = e+1
+    ee = e/len(labelMat)
+    return ee
+def evaluation_analysis(true_label,predicted):
+    '''
+    return all metrics results
+    '''
+    print("accuracy",metrics.accuracy_score(true_label, predicted))
+    print("f1 score macro",metrics.f1_score(true_label, predicted, average='macro'))
+    print("f1 score micro",metrics.f1_score(true_label, predicted, average='micro'))
+    print("precision score",metrics.precision_score(true_label, predicted, average='macro'))
+    print("recall score",metrics.recall_score(true_label, predicted, average='macro'))
+    print("hamming_loss",metrics.hamming_loss(true_label, predicted))
+    print("classification_report", metrics.classification_report(true_label, predicted))
+    #print ("jaccard_similarity_score", metrics.jaccard_similarity_score(true_label, predicted))
+    print("log_loss", metrics.log_loss(true_label, predicted))
+    print("zero_one_loss", metrics.zero_one_loss(true_label, predicted))
+    print("matthews_corrcoef", metrics.matthews_corrcoef(true_label, predicted))
+
 if __name__ == '__main__':
-   dataArr, labelMat = loadDataset()
-   alpha = 0.001
-   maxcycles = 500
-   # alpha = float(eval(input("请输入学习率:")))
-   # maxcycles = int(eval(input("请输入最大迭代次数：")))
-   weight = grandascent(dataArr, labelMat, alpha, maxcycles)
-   print(weight)
-   plot(weight)
+
+    dataArr, labelMat = loadDataset()
+    alpha = 0.001
+    maxcycles = 500
+    y = []
+    # alpha = float(eval(input("请输入学习率:")))
+    # maxcycles = int(eval(input("请输入最大迭代次数：")))
+    weight = grandascent(dataArr, labelMat, alpha, maxcycles)
+    print(weight)
+    dataArr = np.array(dataArr)
+    labelMat = np.array(labelMat)
+    y = sigmoid(dataArr * weight)
+
+    fpr, tpr, th = metrics.roc_curve(labelMat, y, 1)
+    print("auc", metrics.auc(fpr, tpr))
+    plt.figure()
+    plt.plot(fpr,tpr)
+    plt.show()
+    y[y > 0.5] = 1
+    y[y <= 0.5] = 0
+    ee = error(labelMat, y)
+    print("错误率为:", ee)
+    plot(weight)
+    # y = list()
+    # for i in range(len(dataArr)):
+    #     a = float(weight[0] * dataArr[i][0] + weight[1] * dataArr[i][1] + dataArr[i][2])
+    #     y.append(a)
+
+
+    # train_test=pd.read_csv("testSet.txt", sep='\t', header=None)
+    # train_test.values
+    k0 = poly_log_reg = PolynomialLogisticRegression(degree=2)
+    k1 = poly_log_reg.fit(dataArr, labelMat)
+    k2 = poly_log_reg.score(dataArr, labelMat)
+    print("使用sklearn模块中的准确率为：", poly_log_reg.score(dataArr, labelMat))
+    evaluation_analysis(labelMat, y)
+
+    #print ("accuracy", metrics.accuracy_score(labelMat, y))
