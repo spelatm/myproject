@@ -47,6 +47,7 @@
 #         print(chess[p][q], end=' ')
 #     print()
 #不知道为什么上面的跑起来跟下面的很不一样
+import matplotlib.pyplot as plt
 
 def chess(tr, tc, pr, pc, size):
     global mark
@@ -99,26 +100,34 @@ def drawboard(canvas1,board,colors,startx=50,starty=50,cellwidth=50):
     canvas1.config(width=width,height=height)#布置画布
     for i  in range(len(board)):
         for j in range(len(board)):
-            index=board[i][j]
-            if index== 0:
-                color='white'#特殊方格显示为白色
+            index = board[i][j]
+            if index == 0:
+                color = 'white'#特殊方格显示为白色
             else:
-                color=colors[6*index]#为了间隔开颜色
-            cellx=startx+i*50
-        celly=starty+j*50
-        canvas1.create_rectangle(cellx,celly,cellx+cellwidth,celly+cellwidth,fill=color,outline="black")#画方格
+                color = colors[6*index]#为了间隔开颜色
+            cellx = startx+i*50
+        celly = starty+j*50
+        canvas1.create_rectangle(cellx, celly, cellx+cellwidth, celly+cellwidth, fill=color, outline="black") #画方格
     canvas1.update()
+
+
+def visualize(table):
+    plt.imshow(table, cmap=plt.cm.jet, alpha=2.0)
+    plt.colorbar()
+    plt.show()
 
 
 mark = 0
 # n = 8  # 输入8*8的棋盘规格
 print("请输入棋盘的规格K（2^k*2^k）：")
 n = int(eval(input()))
+size = 2**n
 print("请输入特殊方块所在位置（须在棋盘内部，右上角为坐标原点）:")
 bx = int(eval(input()))
 by = int(eval(input()))
 bx = bx-1
 by = by-1
-table = [[-1 for x in range(n)] for y in range(n)]  # -1代表特殊格子
-chess(0, 0, bx, by, n)  # 特殊棋盘位置
+table = [[-1 for x in range(size)] for y in range(size)]  # -1代表特殊格子
+chess(0, 0, bx, by, size)  # 特殊棋盘位置
 show(table)
+visualize(table)
