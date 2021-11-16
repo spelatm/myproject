@@ -4,6 +4,10 @@ import pandas as pd
 from math import log
 import operator
 import matplotlib.pyplot as plt
+import pickle
+import numpy as np
+from sklearn import tree
+from sklearn.datasets import load_iris
 
 decisionNode = dict(boxstyle="sawtooth", fc="0.8")
 leafNode = dict(boxstyle="round4", fc="0.8")
@@ -157,7 +161,7 @@ def plotTree(myTree, parentPt, nodeTxt):
     plotTree.y0ff = plotTree.y0ff + 1.0/plotTree.totalD
 
 def createPlot(inTree):
-    fig = plt.figure(1, facecolor='white')
+    fig = plt.figure(2, facecolor='white')
     fig.clf()
     axprops = dict(xticks=[], yticks=[])
     createPlot.ax1 = plt.subplot(111, frameon=False, **axprops)
@@ -165,7 +169,7 @@ def createPlot(inTree):
     plotTree.totalD = float(getTreeDepth(inTree))
     plotTree.x0ff = -0.5/plotTree.totalW
     plotTree.y0ff = 1.0
-    plotTree(inTree, (0.5,1.0), '')
+    plotTree(inTree, (0.5, 1.0), '')
     plt.show()
 
 def getNumleafs(myTree):
@@ -193,11 +197,48 @@ def getTreeDepth(myTree):
             maxDepth = thisDepth
     return maxDepth
 
-def retrieveTree(i):
-    listoftree = [{'no surfacing': {0: 'no', 1: {'flippers': {0: 'no', 1: 'yes'}}}},
-                  {'no surfacing': {0: 'no', 1: {'flippers': {0: {'head': {0: 'no', 1: 'yes'}}, 1: 'no'}}}}]
+# def retrieveTree(i):
+#     listoftree = [{'no surfacing': {0: 'no', 1: {'flippers': {0: 'no', 1: 'yes'}}}},
+#                   {'no surfacing': {0: 'no', 1: {'flippers': {0: {'head': {0: 'no', 1: 'yes'}}, 1: 'no'}}}}]
+#
+#     return listoftree[i]
 
-    return listoftree[i]
+def save_tree(myTree, filename):
+    with open(filename, "wb") as f:
+        pickle.dump(myTree, f)
+
+def check(filename):
+    with open(filename, 'rb') as f:
+        print(pickle.load(f))
+
+def transformY(data):
+    labelcounts = {}
+    for feat in data:
+        currentlabel = feat[-1]
+        if currentlabel not in labelcounts.keys():
+            labelcounts[currentlabel] = 0
+        labelcounts[currentlabel] += 1
+    labelcounts = list(labelcounts)
+    labelindex = []
+    for i in data:
+        labelindex.append(labelcounts.index(i[-1]))
+    return labelindex
+
+def transformX(data):
+    datacounts = {}
+    labelindex = []
+    for i in range(len(data[0])-1):
+        for feat in data:
+            currentlabel = feat[i]
+            if currentlabel not in datacounts.keys():
+                datacounts[currentlabel] = 0
+            datacounts[currentlabel] += 1
+        labelcounts = list(datacounts)
+        for j in data:
+            labelindex.append(labelcounts.index(j[i]))
+        datacounts.clear()
+    a = np.array(labelindex).reshape(4, 24).T
+    return a
 
 if __name__ == '__main__':
     data, labels = loadData()
@@ -205,5 +246,23 @@ if __name__ == '__main__':
     gini = calgini(data)
     print("该数据集的信息熵为:", shannonent,
           "该数据集的基尼系数为:", gini)
-    k = createTree(data, labels)
-    createPlot(k)
+    myTree = createTree(data, labels)
+    # createPlot(myTree)
+
+
+    clf = tree.DecisionTreeClassifier()
+    clf = clf.fit(transformX(data), transformY(data))
+
+    # tree.plot_tree(clf)
+
+    X, y = load_iris(return_X_y=True)
+    clf1 = tree.DecisionTreeClassifier()
+    clf1 = clf1.fit(X, y)
+    tree.plot_tree(clf1)
+
+
+    createPlot(myTree)
+
+
+    save_tree(myTree, 'treefile')
+    check('treefile')
